@@ -12,6 +12,7 @@ interface GameState {
   isDraw: boolean;
   selectedSquare: string | null; // e.g. "e2"
   legalMoves: string[];          // destination squares
+  pseudoLegalMoves: string[];    // pinned piece paths
   lastMove: { from: string; to: string } | null;
   gameMode: 'vsAI' | 'vsFriend' | null;
   aiLevel: number;               // 1–20
@@ -24,7 +25,9 @@ interface GameState {
   startGame: (mode: 'vsAI' | 'vsFriend', aiLevel?: number, playerColor?: 'w' | 'b') => void;
   setGameStatus: (status: Partial<GameState>) => void;
   selectSquare: (square: string | null) => void;
+  clearSelection: () => void;
   setLegalMoves: (moves: string[]) => void;
+  setPseudoLegalMoves: (moves: string[]) => void;
   flipBoard: () => void;
   setReviewIndex: (i: number | null) => void;
   resetGame: () => void;
@@ -42,6 +45,7 @@ const initialGameState = {
   isDraw: false,
   selectedSquare: null,
   legalMoves: [],
+  pseudoLegalMoves: [],
   lastMove: null,
   gameMode: null,
   aiLevel: 10,
@@ -66,7 +70,11 @@ export const useGameStore = create<GameState>((set) => ({
   
   selectSquare: (square) => set({ selectedSquare: square }),
   
+  clearSelection: () => set({ selectedSquare: null, legalMoves: [], pseudoLegalMoves: [] }),
+  
   setLegalMoves: (moves) => set({ legalMoves: moves }),
+  
+  setPseudoLegalMoves: (moves) => set({ pseudoLegalMoves: moves }),
   
   flipBoard: () => set((state) => ({ isBoardFlipped: !state.isBoardFlipped })),
   

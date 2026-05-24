@@ -3,3 +3,5 @@ dist/
 lila-temp/
 .env
 .DS_Store
+
+.vercel

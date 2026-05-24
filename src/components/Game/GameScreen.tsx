@@ -23,7 +23,7 @@ export const GameScreen: React.FC = () => {
   
   const { alwaysFlipForPlayer } = useSettingsStore();
   
-  const { chess, makeMove, undoMove, getLegalMoves, loadPosition } = useChessGame();
+  const { chess, makeMove, undoMove, getLegalMoves, getPseudoLegalMoves, loadPosition } = useChessGame();
   const { isReady: sfReady, isThinking: aiThinking, getBestMove } = useStockfish();
   const sound = useSound();
 
@@ -243,6 +243,7 @@ export const GameScreen: React.FC = () => {
               chess={chess}
               makeMove={handleCustomMakeMove}
               getLegalMoves={getLegalMoves}
+              getPseudoLegalMoves={getPseudoLegalMoves}
             />
             {/* Hint Arrow Overlay (Simplified: just highlighting squares could work, or an SVG line) */}
             {hintArrow && (

@@ -27,3 +27,12 @@ h1, h2, .logo { font-family: 'Cinzel', serif; }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-secondary);
 }
+
+@keyframes flashRed {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: rgba(220, 50, 50, 0.7); }
+}
+
+.flash-illegal {
+  animation: flashRed 0.4s ease;
+}

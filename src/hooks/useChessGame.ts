@@ -40,6 +40,7 @@ export function useChessGame() {
       isDraw: chess.isDraw(),
       lastMove: lastMove ? { from: lastMove.from, to: lastMove.to } : null,
       legalMoves: [], // Reset legal moves on state update
+      pseudoLegalMoves: [],
       selectedSquare: null,
     });
   }, [chess, setGameStatus]);
@@ -88,6 +89,28 @@ export function useChessGame() {
     const moves = chess.moves({ square: square as any, verbose: true }) as Move[];
     return moves.map(m => m.to);
   }, [chess, reviewIndex]);
+
+  const getPseudoLegalMoves = useCallback((square: string): string[] => {
+    if (reviewIndex !== null) return [];
+    const piece = chess.get(square as any);
+    if (!piece) return [];
+    
+    const tempChess = new Chess(chess.fen());
+    const board = tempChess.board();
+    let kingSquare = '';
+    
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        if (board[r][c]?.type === 'k' && board[r][c]?.color === piece.color) {
+          kingSquare = `${String.fromCharCode(97 + c)}${8 - r}`;
+        }
+      }
+    }
+    
+    if (kingSquare) tempChess.remove(kingSquare as any);
+    const pseudoMoves = tempChess.moves({ square: square as any, verbose: true }) as Move[];
+    return pseudoMoves.map(m => m.to);
+  }, [chess, reviewIndex]);
   
   const loadPosition = useCallback((fen: string) => {
     try {
@@ -103,6 +126,7 @@ export function useChessGame() {
     makeMove,
     undoMove,
     getLegalMoves,
+    getPseudoLegalMoves,
     updateGameState,
     loadPosition
   };

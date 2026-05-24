@@ -7,6 +7,8 @@ interface SquareProps {
   isLastMove: boolean;
   isInCheck: boolean;
   hasLegalMoveDot: boolean;
+  isPseudoLegal?: boolean;
+  isFlashIllegal?: boolean;
   isOccupied: boolean;
   onClick: () => void;
   children?: React.ReactNode;
@@ -18,6 +20,8 @@ export const Square: React.FC<SquareProps> = ({
   isLastMove,
   isInCheck,
   hasLegalMoveDot,
+  isPseudoLegal,
+  isFlashIllegal,
   isOccupied,
   onClick,
   children,
@@ -25,7 +29,7 @@ export const Square: React.FC<SquareProps> = ({
   return (
     <div
       onClick={onClick}
-      className="relative w-full h-full touch-manipulation select-none"
+      className={`relative w-full h-full touch-manipulation select-none ${isFlashIllegal ? 'flash-illegal' : ''}`}
       style={{
         backgroundColor: isLight ? 'var(--light-sq)' : 'var(--dark-sq)',
       }}
@@ -36,6 +40,9 @@ export const Square: React.FC<SquareProps> = ({
       )}
       {isSelected && (
         <div className="absolute inset-0" style={{ backgroundColor: 'var(--selected-sq)' }} />
+      )}
+      {isPseudoLegal && (
+        <div className="absolute inset-0" style={{ backgroundColor: 'rgba(220, 50, 50, 0.4)' }} />
       )}
       {isInCheck && (
         <div className="absolute inset-0" style={{ backgroundColor: 'var(--check-highlight)' }} />
