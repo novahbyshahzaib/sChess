@@ -12,8 +12,7 @@ export function useStockfish() {
       // Assuming stockfish is available in public directory or bundled
       // chess.js instructions said `npm install stockfish`
       // For web use, it is usually a worker
-      // Fallback CDN: https://unpkg.com/stockfish@16.0.0/src/stockfish-nnue-16.js
-      workerRef.current = new Worker('https://unpkg.com/stockfish@16.0.0/src/stockfish-nnue-16.js');
+      workerRef.current = new Worker('/stockfish/stockfish-18-lite-single.js');
       
       workerRef.current.onmessage = (e) => {
         const msg = e.data;

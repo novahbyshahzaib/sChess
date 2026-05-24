@@ -8,7 +8,6 @@ export function useChessGame() {
 
   const updateGameState = useCallback(() => {
     const history = chess.history({ verbose: true }) as Move[];
-    const algebraicHistory = chess.history();
     
     // Calculate captured pieces
     const capturedWhite: string[] = [];
@@ -31,7 +30,6 @@ export function useChessGame() {
     setGameStatus({
       fen: chess.fen(),
       turn: chess.turn(),
-      moveHistory: algebraicHistory,
       capturedByWhite: capturedWhite,
       capturedByBlack: capturedBlack,
       isCheck: chess.isCheck(),
@@ -68,6 +66,7 @@ export function useChessGame() {
       });
 
       if (move) {
+        setGameStatus({ moveHistory: chess.history() });
         updateGameState();
         return true;
       }
@@ -76,12 +75,13 @@ export function useChessGame() {
       return false;
     }
     return false;
-  }, [chess, reviewIndex, updateGameState]);
+  }, [chess, reviewIndex, updateGameState, setGameStatus]);
 
   const undoMove = useCallback(() => {
     chess.undo();
+    setGameStatus({ moveHistory: chess.history() });
     updateGameState();
-  }, [chess, updateGameState]);
+  }, [chess, updateGameState, setGameStatus]);
 
   const getLegalMoves = useCallback((square: string): string[] => {
     if (reviewIndex !== null) return []; // No legal moves in review mode
