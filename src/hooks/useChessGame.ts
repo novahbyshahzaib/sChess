@@ -46,8 +46,10 @@ export function useChessGame() {
   // Handle resetting or starting a new game
   useEffect(() => {
     const unsubscribe = useGameStore.subscribe((state, prevState) => {
-      // If we go from an active game back to null (reset), reset the board
-      if (state.gameMode === null && prevState.gameMode !== null) {
+      if (
+        (state.gameMode === null && prevState.gameMode !== null) ||
+        (state.moveHistory.length === 0 && prevState.moveHistory.length > 0)
+      ) {
         chess.reset();
         updateGameState();
       }
@@ -112,12 +114,16 @@ export function useChessGame() {
     return pseudoMoves.map(m => m.to);
   }, [chess, reviewIndex]);
   
-  const loadPosition = useCallback((fen: string) => {
+  const syncFromHistory = useCallback((history: string[], viewIndex: number | null) => {
     try {
-      chess.load(fen);
+      chess.reset();
+      const limit = viewIndex !== null ? viewIndex + 1 : history.length;
+      for (let i = 0; i < limit; i++) {
+        chess.move(history[i]);
+      }
       updateGameState();
     } catch (e) {
-      console.error("Invalid FEN", e);
+      console.error("Failed to sync from history", e);
     }
   }, [chess, updateGameState]);
 
@@ -128,6 +134,6 @@ export function useChessGame() {
     getLegalMoves,
     getPseudoLegalMoves,
     updateGameState,
-    loadPosition
+    syncFromHistory
   };
 }

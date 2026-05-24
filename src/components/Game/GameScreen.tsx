@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Chess } from 'chess.js';
 import { ArrowLeft, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { useGameStore } from '../../stores/gameStore';
 import { useSettingsStore } from '../../stores/settingsStore';
@@ -23,7 +22,7 @@ export const GameScreen: React.FC = () => {
   
   const { alwaysFlipForPlayer } = useSettingsStore();
   
-  const { chess, makeMove, undoMove, getLegalMoves, getPseudoLegalMoves, loadPosition } = useChessGame();
+  const { chess, makeMove, undoMove, getLegalMoves, getPseudoLegalMoves, syncFromHistory } = useChessGame();
   const { isReady: sfReady, isThinking: aiThinking, getBestMove } = useStockfish();
   const sound = useSound();
 
@@ -119,24 +118,14 @@ export const GameScreen: React.FC = () => {
   }, [moveHistory, turn, gameMode, playerColor, chess, sound]);
 
   // Review mode logic
+  const prevReviewIndex = useRef<number | null>(reviewIndex);
   useEffect(() => {
-    if (reviewIndex !== null) {
-      // Replay moves up to reviewIndex
-      const tempChess = new (Chess as any)();
-      const hist = moveHistory.slice(0, reviewIndex + 1);
-      for (const m of hist) {
-        tempChess.move(m);
-      }
-      loadPosition(tempChess.fen());
-    } else {
-      // Return to live
-      const tempChess = new (Chess as any)();
-      for (const m of moveHistory) {
-        tempChess.move(m);
-      }
-      loadPosition(tempChess.fen());
-    }
-  }, [reviewIndex, moveHistory, loadPosition]);
+    // Only rebuild the chess board if reviewIndex actually changed (or transitioned to/from null)
+    if (reviewIndex === prevReviewIndex.current) return;
+    prevReviewIndex.current = reviewIndex;
+
+    syncFromHistory(moveHistory, reviewIndex);
+  }, [reviewIndex, moveHistory, syncFromHistory]);
 
   const handleCustomMakeMove = (from: string, to: string) => {
     const success = makeMove(from, to);
