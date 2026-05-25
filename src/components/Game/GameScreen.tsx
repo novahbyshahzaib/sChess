@@ -66,11 +66,8 @@ export const GameScreen: React.FC = () => {
           if (gameMode === 'vsLLM' || gameMode === 'vsLLMLLM') {
             getLLMMove(fen, turn, moveHistory).then(moveStr => {
               if (moveStr) {
-                const from = moveStr.substring(0, 2);
-                const to = moveStr.substring(2, 4);
-                const promotion = moveStr.length > 4 ? moveStr[4] : undefined;
-                
-                const success = makeMove(from, to, promotion);
+                // LLM outputs SAN string directly (e.g. "e4")
+                const success = makeMove(moveStr);
                 if (success) {
                   const isCapture = chess.history({verbose:true}).slice(-1)[0]?.captured;
                   if (chess.isCheck()) sound.playCheck();

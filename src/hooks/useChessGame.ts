@@ -57,15 +57,14 @@ export function useChessGame() {
     return unsubscribe;
   }, [chess, updateGameState]);
 
-  const makeMove = useCallback((from: string, to: string, promotion?: string): boolean => {
+  const makeMove = useCallback((from: string, to?: string, promotion?: string): boolean => {
     if (reviewIndex !== null) return false; // Cannot move in review mode
 
     try {
-      const move = chess.move({
-        from,
-        to,
-        promotion: promotion || 'q',
-      });
+      // If `to` is not provided, treat `from` as a SAN string (e.g. "e4")
+      const move = to 
+        ? chess.move({ from, to, promotion: promotion || 'q' })
+        : chess.move(from);
 
       if (move) {
         setGameStatus({ moveHistory: chess.history() });

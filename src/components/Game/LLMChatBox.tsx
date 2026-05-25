@@ -1,14 +1,25 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState, UIEvent } from 'react';
 import { Bot, User } from 'lucide-react';
 import { useGameStore } from '../../stores/gameStore';
 
 export const LLMChatBox: React.FC = () => {
   const { llmChatHistory, isAIThinking } = useGameStore();
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [autoScroll, setAutoScroll] = useState(true);
+
+  const handleScroll = (e: UIEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLDivElement;
+    // Check if we are near the bottom (within 50 pixels)
+    const isNearBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 50;
+    setAutoScroll(isNearBottom);
+  };
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [llmChatHistory, isAIThinking]);
+    if (autoScroll) {
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [llmChatHistory, isAIThinking, autoScroll]);
 
   return (
     <div className="flex flex-col bg-panel border border-border rounded-xl h-full max-h-[400px] overflow-hidden">
@@ -17,7 +28,11 @@ export const LLMChatBox: React.FC = () => {
         <h3 className="font-bold text-text-primary text-sm uppercase tracking-wider">AI Opponent</h3>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div 
+        ref={containerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto p-4 space-y-4"
+      >
         {llmChatHistory.length === 0 && (
           <div className="text-center text-text-secondary text-sm italic mt-4">
             The AI is ready to play. Make your move!
