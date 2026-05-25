@@ -36,7 +36,7 @@ export const useSettingsStore = create<SettingsState>()(
       alwaysFlipForPlayer: false,
       llmProvider: 'gemini',
       llmApiKey: '',
-      llmModelId: 'gemini-2.5-flash',
+      llmModelId: 'gemini-1.5-flash',
       setTheme: (id) => set({ themeId: id }),
       toggleSetting: (key) => set((state) => ({ [key]: !state[key as keyof typeof state] })),
       setSoundVolume: (v) => set({ soundVolume: v }),

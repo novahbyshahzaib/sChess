@@ -99,11 +99,22 @@ export const PlayVsAI: React.FC = () => {
 
         <button 
           onClick={handlePlay}
-          className="w-full py-4 rounded-xl bg-accent text-background font-bold text-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+          className="w-full py-4 rounded-xl bg-accent text-background font-bold text-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity mb-4"
           style={{ boxShadow: '0 4px 20px var(--accent-30)' }}
         >
           <Play fill="currentColor" />
           Play Match
+        </button>
+
+        <button 
+          onClick={() => {
+            startGame('vsAIAI', level, 'w');
+            navigate('/game');
+          }}
+          className="w-full py-4 rounded-xl bg-panel border border-border text-text-primary font-bold text-lg flex items-center justify-center gap-2 hover:border-accent transition-colors"
+        >
+          <Dna />
+          Watch AI vs AI
         </button>
       </div>
     </div>

@@ -14,7 +14,7 @@ interface GameState {
   legalMoves: string[];          // destination squares
   pseudoLegalMoves: string[];    // pinned piece paths
   lastMove: { from: string; to: string } | null;
-  gameMode: 'vsAI' | 'vsFriend' | 'vsLLM' | null;
+  gameMode: 'vsAI' | 'vsFriend' | 'vsLLM' | 'vsAIAI' | 'vsLLMLLM' | null;
   aiLevel: number;               // 1–20
   playerColor: 'w' | 'b';
   isBoardFlipped: boolean;
@@ -23,7 +23,7 @@ interface GameState {
   llmChatHistory: { role: 'user' | 'assistant'; text: string }[];
   
   // actions
-  startGame: (mode: 'vsAI' | 'vsFriend' | 'vsLLM', aiLevel?: number, playerColor?: 'w' | 'b') => void;
+  startGame: (mode: 'vsAI' | 'vsFriend' | 'vsLLM' | 'vsAIAI' | 'vsLLMLLM', aiLevel?: number, playerColor?: 'w' | 'b') => void;
   setGameStatus: (status: Partial<GameState>) => void;
   selectSquare: (square: string | null) => void;
   clearSelection: () => void;

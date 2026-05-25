@@ -65,13 +65,23 @@ export const PlayVsLLM: React.FC = () => {
               </div>
             </div>
             
-            <div className="pt-4 flex justify-center">
+            <div className="pt-4 flex flex-col gap-4 items-center">
               <button
                 onClick={() => handleStart(Math.random() > 0.5 ? 'w' : 'b')}
-                className="px-6 py-3 bg-panel border border-border hover:border-accent text-text-primary rounded-xl flex items-center gap-2 transition-all hover:text-accent"
+                className="w-full px-6 py-3 bg-panel border border-border hover:border-accent text-text-primary rounded-xl flex items-center justify-center gap-2 transition-all hover:text-accent"
               >
                 <Play size={20} />
                 Random Color
+              </button>
+
+              <button 
+                onClick={() => {
+                  startGame('vsLLMLLM', undefined, 'w');
+                  navigate('/game');
+                }}
+                className="w-full py-3 rounded-xl bg-panel border border-border text-text-primary font-bold text-lg flex items-center justify-center gap-2 hover:border-accent transition-colors"
+              >
+                Watch LLM vs LLM
               </button>
             </div>
           </div>

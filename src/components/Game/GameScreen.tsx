@@ -42,19 +42,28 @@ export const GameScreen: React.FC = () => {
   const whiteAdvantage = Math.max(0, whiteCapturedValue - blackCapturedValue);
   const blackAdvantage = Math.max(0, blackCapturedValue - whiteCapturedValue);
 
+  const lastAITurnRef = useRef<number>(-1);
+
   // AI Move Logic
   useEffect(() => {
-    if ((gameMode !== 'vsAI' && gameMode !== 'vsLLM') || reviewIndex !== null) return;
+    if ((gameMode !== 'vsAI' && gameMode !== 'vsLLM' && gameMode !== 'vsAIAI' && gameMode !== 'vsLLMLLM') || reviewIndex !== null) return;
     
     // If it's the AI's turn
-    if ((playerColor === 'w' && turn === 'b') || (playerColor === 'b' && turn === 'w')) {
+    const isAITurn = gameMode === 'vsAIAI' || gameMode === 'vsLLMLLM' || 
+      (gameMode === 'vsAI' && ((playerColor === 'w' && turn === 'b') || (playerColor === 'b' && turn === 'w'))) ||
+      (gameMode === 'vsLLM' && ((playerColor === 'w' && turn === 'b') || (playerColor === 'b' && turn === 'w')));
+
+    if (isAITurn) {
+      if (lastAITurnRef.current === moveHistory.length) return;
+      lastAITurnRef.current = moveHistory.length;
+
       if (!isCheckmate && !isStalemate && !isDraw) {
         // AI should move
         const fen = chess.fen();
         
         // Small delay so it feels natural
         const timer = setTimeout(() => {
-          if (gameMode === 'vsLLM') {
+          if (gameMode === 'vsLLM' || gameMode === 'vsLLMLLM') {
             getLLMMove(fen, turn, moveHistory).then(moveStr => {
               if (moveStr) {
                 const from = moveStr.substring(0, 2);
@@ -70,7 +79,7 @@ export const GameScreen: React.FC = () => {
                 }
               }
             });
-          } else if (sfReady) {
+          } else if (sfReady) { // Stockfish handles vsAI and vsAIAI
             getBestMove(fen, aiLevel).then(moveStr => {
               // moveStr is like "e2e4" or "e7e8q"
               const from = moveStr.substring(0, 2);
@@ -167,10 +176,13 @@ export const GameScreen: React.FC = () => {
     if (gameMode === 'vsAI' || gameMode === 'vsLLM') {
       undoMove(); // Undo AI
       undoMove(); // Undo Player
+    } else if (gameMode === 'vsAIAI' || gameMode === 'vsLLMLLM') {
+      undoMove(); // Just undo 1 for AI vs AI, or maybe we don't want them to undo, but let's allow 1
     } else {
       undoMove();
     }
     historyLenRef.current = moveHistory.length;
+    lastAITurnRef.current = -1;
   };
 
   const handleResign = () => {
@@ -212,12 +224,12 @@ export const GameScreen: React.FC = () => {
   };
 
   // Determine opponent and player bars
-  const topPlayerIsBlack = playerColor === 'w' || gameMode === 'vsFriend';
+  const topPlayerIsBlack = playerColor === 'w' || gameMode === 'vsFriend' || gameMode === 'vsAIAI' || gameMode === 'vsLLMLLM';
   
   const botElo = getEloLabel(aiLevel);
-  const botName = gameMode === 'vsLLM' ? 'LLM Opponent' : (aiLevel === 20 ? 'Maximum AI' : 'sChess Bot');
+  const botName = (gameMode === 'vsLLM' || gameMode === 'vsLLMLLM') ? 'LLM Opponent' : (aiLevel === 20 ? 'Maximum AI' : 'sChess Bot');
 
-  const isAIGame = gameMode === 'vsAI' || gameMode === 'vsLLM';
+  const isAIGame = gameMode === 'vsAI' || gameMode === 'vsLLM' || gameMode === 'vsAIAI' || gameMode === 'vsLLMLLM';
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center">
@@ -235,7 +247,7 @@ export const GameScreen: React.FC = () => {
       <div className="w-full max-w-5xl flex-1 flex flex-col md:flex-row p-2 md:p-6 gap-6 relative">
         
         {/* Left Column - Board */}
-        <div className="w-full md:w-[500px] lg:w-[600px] flex-shrink-0 mx-auto flex flex-col">
+        <div className="w-full md:max-w-[400px] lg:max-w-[450px] flex-shrink-0 mx-auto flex flex-col">
           
           {/* Top Player Bar */}
           <PlayerBar 
@@ -274,9 +286,9 @@ export const GameScreen: React.FC = () => {
 
           {/* Bottom Player Bar */}
           <PlayerBar 
-            name={isAIGame && !topPlayerIsBlack ? botName : 'You'}
-            isAI={isAIGame && !topPlayerIsBlack}
-            elo={isAIGame && !topPlayerIsBlack && gameMode !== 'vsLLM' ? botElo : undefined}
+            name={(gameMode === 'vsAIAI' || gameMode === 'vsLLMLLM') ? botName : (isAIGame && !topPlayerIsBlack ? botName : 'You')}
+            isAI={(gameMode === 'vsAIAI' || gameMode === 'vsLLMLLM') || (isAIGame && !topPlayerIsBlack)}
+            elo={((gameMode === 'vsAIAI' || gameMode === 'vsLLMLLM') || (isAIGame && !topPlayerIsBlack)) && gameMode !== 'vsLLM' && gameMode !== 'vsLLMLLM' ? botElo : undefined}
             isActive={turn === (!topPlayerIsBlack ? 'b' : 'w')}
             capturedPieces={!topPlayerIsBlack ? capturedByBlack : capturedByWhite}
             capturedColor={!topPlayerIsBlack ? 'w' : 'b'}

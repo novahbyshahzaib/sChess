@@ -48,11 +48,16 @@ Remember: Output ONLY valid JSON. Example: {"move": "e4", "chat": "I'm taking co
           })
         });
 
-        if (!res.ok) throw new Error(`OpenRouter API error: ${res.statusText}`);
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`OpenRouter API error: ${res.status} - ${errText}`);
+        }
         const data = await res.json();
         responseText = data.choices[0].message.content;
       } else if (llmProvider === 'gemini') {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${llmModelId || 'gemini-2.5-flash'}:generateContent?key=${llmApiKey}`, {
+        let finalModelId = (llmModelId || 'gemini-1.5-flash').trim();
+        if (finalModelId.startsWith('models/')) finalModelId = finalModelId.substring(7);
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${finalModelId}:generateContent?key=${llmApiKey}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -62,7 +67,10 @@ Remember: Output ONLY valid JSON. Example: {"move": "e4", "chat": "I'm taking co
           })
         });
 
-        if (!res.ok) throw new Error(`Gemini API error: ${res.statusText}`);
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`Gemini API error: ${res.status} - ${errText}`);
+        }
         const data = await res.json();
         responseText = data.candidates[0].content.parts[0].text;
       }

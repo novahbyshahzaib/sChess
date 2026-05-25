@@ -84,11 +84,11 @@ export const SettingsScreen: React.FC = () => {
                   type="text"
                   value={settings.llmModelId}
                   onChange={(e) => settings.setLLMSettings(settings.llmProvider, settings.llmApiKey, e.target.value)}
-                  placeholder={settings.llmProvider === 'gemini' ? "gemini-2.5-flash" : "google/gemini-2.5-flash"}
+                  placeholder={settings.llmProvider === 'gemini' ? "gemini-1.5-flash" : "google/gemini-2.5-flash"}
                   className="w-full bg-background border border-border rounded-lg p-2 text-text-primary focus:border-accent focus:outline-none"
                 />
                 <p className="text-xs text-text-secondary mt-1">
-                  Default for Gemini: <span className="font-mono text-accent">gemini-2.5-flash</span>. 
+                  Default for Gemini: <span className="font-mono text-accent">gemini-1.5-flash</span>. 
                   Default for OpenRouter: <span className="font-mono text-accent">google/gemini-2.5-flash</span>
                 </p>
               </div>
