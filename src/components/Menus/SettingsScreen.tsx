@@ -53,6 +53,48 @@ export const SettingsScreen: React.FC = () => {
             </div>
           </section>
 
+          {/* AI Provider Settings */}
+          <section>
+            <h2 className="text-xl font-bold mb-4 text-text-secondary uppercase tracking-wider text-sm">AI Provider Settings (Play vs LLM)</h2>
+            <div className="bg-panel rounded-xl border border-border overflow-hidden p-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Provider</label>
+                <select 
+                  value={settings.llmProvider}
+                  onChange={(e) => settings.setLLMSettings(e.target.value as 'gemini' | 'openrouter', settings.llmApiKey, settings.llmModelId)}
+                  className="w-full bg-background border border-border rounded-lg p-2 text-text-primary focus:border-accent focus:outline-none"
+                >
+                  <option value="gemini">Google Gemini</option>
+                  <option value="openrouter">OpenRouter</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">API Key</label>
+                <input 
+                  type="password"
+                  value={settings.llmApiKey}
+                  onChange={(e) => settings.setLLMSettings(settings.llmProvider, e.target.value, settings.llmModelId)}
+                  placeholder={`Enter your ${settings.llmProvider === 'gemini' ? 'Gemini' : 'OpenRouter'} API Key`}
+                  className="w-full bg-background border border-border rounded-lg p-2 text-text-primary focus:border-accent focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Model ID</label>
+                <input 
+                  type="text"
+                  value={settings.llmModelId}
+                  onChange={(e) => settings.setLLMSettings(settings.llmProvider, settings.llmApiKey, e.target.value)}
+                  placeholder={settings.llmProvider === 'gemini' ? "gemini-2.5-flash" : "google/gemini-2.5-flash"}
+                  className="w-full bg-background border border-border rounded-lg p-2 text-text-primary focus:border-accent focus:outline-none"
+                />
+                <p className="text-xs text-text-secondary mt-1">
+                  Default for Gemini: <span className="font-mono text-accent">gemini-2.5-flash</span>. 
+                  Default for OpenRouter: <span className="font-mono text-accent">google/gemini-2.5-flash</span>
+                </p>
+              </div>
+            </div>
+          </section>
+
           {/* Gameplay */}
           <section>
             <h2 className="text-xl font-bold mb-4 text-text-secondary uppercase tracking-wider text-sm">Gameplay</h2>

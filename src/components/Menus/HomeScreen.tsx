@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Cpu, Users, Puzzle, Settings, Play } from 'lucide-react';
+import { Cpu, Users, Puzzle, Settings, Play, Bot } from 'lucide-react';
 import { useGameStore } from '../../stores/gameStore';
 
 export const HomeScreen: React.FC = () => {
@@ -75,6 +75,15 @@ export const HomeScreen: React.FC = () => {
             <Users size={48} className="text-accent mb-4 group-hover:scale-110 transition-transform" />
             <h2 className="text-2xl font-bold text-text-primary">Play vs Friend</h2>
             <p className="text-text-secondary mt-2">Pass & Play</p>
+          </button>
+
+          <button
+            onClick={() => navigate('/play-llm')}
+            className="flex flex-col items-center justify-center p-8 bg-panel border border-border rounded-xl transition-all hover:-translate-y-1 hover:border-accent hover:shadow-[0_0_20px_var(--accent-30)] group"
+          >
+            <Bot size={48} className="text-accent mb-4 group-hover:scale-110 transition-transform" />
+            <h2 className="text-2xl font-bold text-text-primary">Play vs LLM</h2>
+            <p className="text-text-secondary mt-2">Chat with AI</p>
           </button>
 
           <button

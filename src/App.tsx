@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './ThemeProvider';
 import { HomeScreen } from './components/Menus/HomeScreen';
 import { PlayVsAI } from './components/Menus/PlayVsAI';
+import { PlayVsLLM } from './components/Menus/PlayVsLLM';
 import { SettingsScreen } from './components/Menus/SettingsScreen';
 import { GameScreen } from './components/Game/GameScreen';
 
@@ -12,6 +13,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomeScreen />} />
           <Route path="/play-ai" element={<PlayVsAI />} />
+          <Route path="/play-llm" element={<PlayVsLLM />} />
           <Route path="/settings" element={<SettingsScreen />} />
           <Route path="/game" element={<GameScreen />} />
         </Routes>

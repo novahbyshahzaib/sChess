@@ -14,15 +14,16 @@ interface GameState {
   legalMoves: string[];          // destination squares
   pseudoLegalMoves: string[];    // pinned piece paths
   lastMove: { from: string; to: string } | null;
-  gameMode: 'vsAI' | 'vsFriend' | null;
+  gameMode: 'vsAI' | 'vsFriend' | 'vsLLM' | null;
   aiLevel: number;               // 1–20
   playerColor: 'w' | 'b';
   isBoardFlipped: boolean;
   isAIThinking: boolean;
   reviewIndex: number | null;    // null = live game, number = review mode position
+  llmChatHistory: { role: 'user' | 'assistant'; text: string }[];
   
   // actions
-  startGame: (mode: 'vsAI' | 'vsFriend', aiLevel?: number, playerColor?: 'w' | 'b') => void;
+  startGame: (mode: 'vsAI' | 'vsFriend' | 'vsLLM', aiLevel?: number, playerColor?: 'w' | 'b') => void;
   setGameStatus: (status: Partial<GameState>) => void;
   selectSquare: (square: string | null) => void;
   clearSelection: () => void;
@@ -30,6 +31,8 @@ interface GameState {
   setPseudoLegalMoves: (moves: string[]) => void;
   flipBoard: () => void;
   setReviewIndex: (i: number | null) => void;
+  addLLMChatMessage: (msg: { role: 'user' | 'assistant'; text: string }) => void;
+  clearLLMChat: () => void;
   resetGame: () => void;
 }
 
@@ -53,6 +56,7 @@ const initialGameState = {
   isBoardFlipped: false,
   isAIThinking: false,
   reviewIndex: null,
+  llmChatHistory: [],
 };
 
 export const useGameStore = create<GameState>((set) => ({
@@ -64,6 +68,7 @@ export const useGameStore = create<GameState>((set) => ({
     aiLevel,
     playerColor,
     isBoardFlipped: playerColor === 'b',
+    llmChatHistory: [],
   }),
   
   setGameStatus: (status) => set((state) => ({ ...state, ...status })),
@@ -79,6 +84,10 @@ export const useGameStore = create<GameState>((set) => ({
   flipBoard: () => set((state) => ({ isBoardFlipped: !state.isBoardFlipped })),
   
   setReviewIndex: (i) => set({ reviewIndex: i }),
+
+  addLLMChatMessage: (msg) => set((state) => ({ llmChatHistory: [...state.llmChatHistory, msg] })),
+
+  clearLLMChat: () => set({ llmChatHistory: [] }),
   
   resetGame: () => set(initialGameState),
 }));

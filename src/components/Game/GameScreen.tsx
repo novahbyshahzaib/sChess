@@ -5,11 +5,13 @@ import { useGameStore } from '../../stores/gameStore';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useChessGame } from '../../hooks/useChessGame';
 import { useStockfish } from '../../hooks/useStockfish';
+import { useLLMOpponent } from '../../hooks/useLLMOpponent';
 import { useSound } from '../../hooks/useSound';
 import { Board } from '../Board/Board';
 import { PlayerBar } from './PlayerBar';
 import { MoveList } from './MoveList';
 import { GameControls } from './GameControls';
+import { LLMChatBox } from './LLMChatBox';
 import { GameOver } from '../Menus/GameOver';
 
 export const GameScreen: React.FC = () => {
@@ -24,6 +26,7 @@ export const GameScreen: React.FC = () => {
   
   const { chess, makeMove, undoMove, getLegalMoves, getPseudoLegalMoves, syncFromHistory } = useChessGame();
   const { isReady: sfReady, isThinking: aiThinking, getBestMove } = useStockfish();
+  const { isThinking: llmThinking, getBestMove: getLLMMove } = useLLMOpponent();
   const sound = useSound();
 
   const [showGameOver, setShowGameOver] = useState(false);
@@ -41,7 +44,7 @@ export const GameScreen: React.FC = () => {
 
   // AI Move Logic
   useEffect(() => {
-    if (gameMode !== 'vsAI' || reviewIndex !== null) return;
+    if ((gameMode !== 'vsAI' && gameMode !== 'vsLLM') || reviewIndex !== null) return;
     
     // If it's the AI's turn
     if ((playerColor === 'w' && turn === 'b') || (playerColor === 'b' && turn === 'w')) {
@@ -51,7 +54,23 @@ export const GameScreen: React.FC = () => {
         
         // Small delay so it feels natural
         const timer = setTimeout(() => {
-          if (sfReady) {
+          if (gameMode === 'vsLLM') {
+            getLLMMove(fen, turn, moveHistory).then(moveStr => {
+              if (moveStr) {
+                const from = moveStr.substring(0, 2);
+                const to = moveStr.substring(2, 4);
+                const promotion = moveStr.length > 4 ? moveStr[4] : undefined;
+                
+                const success = makeMove(from, to, promotion);
+                if (success) {
+                  const isCapture = chess.history({verbose:true}).slice(-1)[0]?.captured;
+                  if (chess.isCheck()) sound.playCheck();
+                  else if (isCapture) sound.playCapture();
+                  else sound.playMove(true);
+                }
+              }
+            });
+          } else if (sfReady) {
             getBestMove(fen, aiLevel).then(moveStr => {
               // moveStr is like "e2e4" or "e7e8q"
               const from = moveStr.substring(0, 2);
@@ -72,7 +91,7 @@ export const GameScreen: React.FC = () => {
         return () => clearTimeout(timer);
       }
     }
-  }, [turn, gameMode, playerColor, isCheckmate, isStalemate, isDraw, reviewIndex, sfReady, chess, aiLevel, getBestMove, makeMove, sound]);
+  }, [turn, gameMode, playerColor, isCheckmate, isStalemate, isDraw, reviewIndex, sfReady, chess, aiLevel, getBestMove, getLLMMove, moveHistory, makeMove, sound]);
 
   // Handle Game Over
   useEffect(() => {
@@ -98,7 +117,7 @@ export const GameScreen: React.FC = () => {
       historyLenRef.current = moveHistory.length;
       
       // Determine if it was player or AI
-      const isPlayerTurn = gameMode === 'vsFriend' || (gameMode === 'vsAI' && turn === (playerColor === 'w' ? 'b' : 'w')); 
+      const isPlayerTurn = gameMode === 'vsFriend' || ((gameMode === 'vsAI' || gameMode === 'vsLLM') && turn === (playerColor === 'w' ? 'b' : 'w')); 
       // Note: turn has already updated! So if player is W, and turn is now B, player just moved.
       
       if (isPlayerTurn) {
@@ -133,7 +152,7 @@ export const GameScreen: React.FC = () => {
   };
 
   const handleHint = async () => {
-    if (sfReady && !aiThinking) {
+    if (sfReady && !aiThinking && !llmThinking) {
       const moveStr = await getBestMove(chess.fen(), aiLevel);
       if (moveStr) {
         const from = moveStr.substring(0, 2);
@@ -145,7 +164,7 @@ export const GameScreen: React.FC = () => {
   };
 
   const handleUndo = () => {
-    if (gameMode === 'vsAI') {
+    if (gameMode === 'vsAI' || gameMode === 'vsLLM') {
       undoMove(); // Undo AI
       undoMove(); // Undo Player
     } else {
@@ -196,7 +215,9 @@ export const GameScreen: React.FC = () => {
   const topPlayerIsBlack = playerColor === 'w' || gameMode === 'vsFriend';
   
   const botElo = getEloLabel(aiLevel);
-  const botName = aiLevel === 20 ? 'Maximum AI' : 'sChess Bot';
+  const botName = gameMode === 'vsLLM' ? 'LLM Opponent' : (aiLevel === 20 ? 'Maximum AI' : 'sChess Bot');
+
+  const isAIGame = gameMode === 'vsAI' || gameMode === 'vsLLM';
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center">
@@ -218,9 +239,9 @@ export const GameScreen: React.FC = () => {
           
           {/* Top Player Bar */}
           <PlayerBar 
-            name={gameMode === 'vsAI' && topPlayerIsBlack ? botName : (topPlayerIsBlack ? 'Black Player' : 'White Player')}
-            isAI={gameMode === 'vsAI' && topPlayerIsBlack}
-            elo={gameMode === 'vsAI' && topPlayerIsBlack ? botElo : undefined}
+            name={isAIGame && topPlayerIsBlack ? botName : (topPlayerIsBlack ? 'Black Player' : 'White Player')}
+            isAI={isAIGame && topPlayerIsBlack}
+            elo={isAIGame && topPlayerIsBlack && gameMode !== 'vsLLM' ? botElo : undefined}
             isActive={turn === (topPlayerIsBlack ? 'b' : 'w')}
             capturedPieces={topPlayerIsBlack ? capturedByBlack : capturedByWhite}
             capturedColor={topPlayerIsBlack ? 'w' : 'b'}
@@ -234,11 +255,9 @@ export const GameScreen: React.FC = () => {
               getLegalMoves={getLegalMoves}
               getPseudoLegalMoves={getPseudoLegalMoves}
             />
-            {/* Hint Arrow Overlay (Simplified: just highlighting squares could work, or an SVG line) */}
+            {/* Hint Arrow Overlay */}
             {hintArrow && (
               <div className="absolute inset-0 pointer-events-none z-30">
-                {/* For a real SVG arrow, calculate coordinates based on squares. Since coordinates depend on board flip, a simple highlight is easier */}
-                {/* Not fully implemented exact arrow coordinates here to save space, but could be added */}
               </div>
             )}
             
@@ -255,9 +274,9 @@ export const GameScreen: React.FC = () => {
 
           {/* Bottom Player Bar */}
           <PlayerBar 
-            name={gameMode === 'vsAI' && !topPlayerIsBlack ? botName : 'You'}
-            isAI={gameMode === 'vsAI' && !topPlayerIsBlack}
-            elo={gameMode === 'vsAI' && !topPlayerIsBlack ? botElo : undefined}
+            name={isAIGame && !topPlayerIsBlack ? botName : 'You'}
+            isAI={isAIGame && !topPlayerIsBlack}
+            elo={isAIGame && !topPlayerIsBlack && gameMode !== 'vsLLM' ? botElo : undefined}
             isActive={turn === (!topPlayerIsBlack ? 'b' : 'w')}
             capturedPieces={!topPlayerIsBlack ? capturedByBlack : capturedByWhite}
             capturedColor={!topPlayerIsBlack ? 'w' : 'b'}
@@ -267,8 +286,20 @@ export const GameScreen: React.FC = () => {
         </div>
 
         {/* Right Column - Controls & History */}
-        <div className="flex-1 flex flex-col min-w-[260px] max-w-sm mx-auto md:mx-0 w-full mb-6 md:mb-0 gap-4">
-          <MoveList />
+        <div className="flex-1 flex flex-col min-w-[260px] max-w-sm mx-auto md:mx-0 w-full mb-6 md:mb-0 gap-4 h-full">
+          {gameMode === 'vsLLM' ? (
+            <div className="flex flex-col h-[600px] gap-4">
+              <div className="flex-1 min-h-[250px]">
+                <LLMChatBox />
+              </div>
+              <div className="flex-[0.6] min-h-[150px]">
+                <MoveList />
+              </div>
+            </div>
+          ) : (
+            <MoveList />
+          )}
+          
           <GameControls 
             onHint={handleHint}
             onUndo={handleUndo}
