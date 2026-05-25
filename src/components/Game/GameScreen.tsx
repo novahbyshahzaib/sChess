@@ -67,12 +67,21 @@ export const GameScreen: React.FC = () => {
             getLLMMove(fen, turn, moveHistory).then(moveStr => {
               if (moveStr) {
                 // LLM outputs SAN string directly (e.g. "e4")
-                const success = makeMove(moveStr);
+                const cleanMove = moveStr.trim();
+                const success = makeMove(cleanMove);
                 if (success) {
                   const isCapture = chess.history({verbose:true}).slice(-1)[0]?.captured;
                   if (chess.isCheck()) sound.playCheck();
                   else if (isCapture) sound.playCapture();
                   else sound.playMove(true);
+                } else {
+                  // Fallback if LLM outputs an invalid move
+                  useGameStore.getState().addLLMChatMessage({
+                    role: 'assistant',
+                    text: `Oops, I tried to play an invalid move: "${cleanMove}". Let's try something else.`
+                  });
+                  // Reset lastAITurnRef so it can retry
+                  lastAITurnRef.current = -1;
                 }
               }
             });

@@ -16,8 +16,8 @@ export const LLMChatBox: React.FC = () => {
   };
 
   useEffect(() => {
-    if (autoScroll) {
-      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (autoScroll && containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
   }, [llmChatHistory, isAIThinking, autoScroll]);
 
